@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог животных</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-img-top { height: 200px; object-fit: cover; }
+        .filter-btn.active { background-color: #0d6efd; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <h1 class="text-center mb-4">🐾 Наши животные</h1>
+        <div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Фильтры</h5>
+                <div class="mb-2"><strong>Вид</strong></div>
+                <div class="btn-group-vertical w-100" id="filterSpecies"></div>
+                <hr>
+                <div class="mb-2"><strong>Возраст</strong></div>
+                <div class="btn-group-vertical w-100" id="filterAge"></div>
+                <hr>
+                <button class="btn btn-secondary w-100 mt-3" id="resetFilters">Сбросить</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="row" id="animalsContainer">
+            <!-- Карточки будут вставлены JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const animals = [{"id":1,"name":"Барсик","species":"cat","breed":"Дворняга","age_months":24,"size":"средний","is_active":true,"photo_url":"https://drive.google.com/thumbnail?id=1UNZrPkA3KsxEDFMAbapRVFnELrGyBlT8&sz=w1000","description":"Ласковый и игривый","created_at":"2025-01-01"},{"id":2,"name":"Шарик","species":"dog","breed":"Дворняга","age_months":12,"size":"мелкий","is_active":true,"photo_url":"https://drive.google.com/thumbnail?id=1A33BXtdVZZ-Subwj_VhES0F9N0NFhKtq&sz=w1000","description":"Спокойный","created_at":"2025-01-02"},{"id":3,"name":"Бобик","species":"dog","breed":"Дворняга","age_months":5,"size":"крупный","is_active":true,"photo_url":"https://drive.google.com/thumbnail?id=1ObPB2YJzXuWHvPn1FP9GKfN6fdEj_Nsp&sz=w1000","description":"Быстрый","created_at":"2025-01-03"}];
+    
+    function renderCards(filtered) {
+        const container = document.getElementById('animalsContainer');
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-info">Нет животных с такими критериями</div></div>';
+            return;
+        }
+        container.innerHTML = filtered.map(animal => `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <img src="${animal.photo_url || 'https://via.placeholder.com/300x200?text=Нет+фото'}" class="card-img-top" alt="${animal.name}">
+                    <div class="card-body">
+                        <h5 class="card-title">${animal.name}</h5>
+                        <p class="card-text">
+                            <span class="badge bg-primary">${animal.species === 'cat' ? 'Кошка' : 'Собака'}</span>
+                            <span class="badge bg-secondary">${animal.age_months < 12 ? animal.age_months + ' мес.' : Math.floor(animal.age_months/12) + ' г.'}</span>
+                            <br>${animal.breed}<br>
+                            ${animal.description.substring(0, 80)}...
+                        </p>
+                        <a href="/animal/${animal.id}/" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function initFilters() {
+        const speciesSet = [...new Set(animals.map(a => a.species))];
+        const speciesDiv = document.getElementById('filterSpecies');
+        speciesDiv.innerHTML = speciesSet.map(s => `
+            <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="species" data-value="${s}">${s === 'cat' ? 'Кошки' : 'Собаки'}</button>
+        `).join('');
+        
+        const ageRanges = [
+            { label: 'До 6 мес', min: 0, max: 6 },
+            { label: '6-12 мес', min: 6, max: 12 },
+            { label: '1-3 года', min: 12, max: 36 },
+            { label: 'Старше 3 лет', min: 36, max: Infinity }
+        ];
+        const ageDiv = document.getElementById('filterAge');
+        ageDiv.innerHTML = ageRanges.map(r => `
+            <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="age" data-min="${r.min}" data-max="${r.max}">${r.label}</button>
+        `).join('');
+        
+        let activeSpecies = null;
+        let activeAgeRange = null;
+        
+        function applyFilters() {
+            let filtered = animals;
+            if (activeSpecies) filtered = filtered.filter(a => a.species === activeSpecies);
+            if (activeAgeRange) filtered = filtered.filter(a => a.age_months >= activeAgeRange.min && a.age_months < activeAgeRange.max);
+            renderCards(filtered);
+        }
+        
+        document.querySelectorAll('[data-filter="species"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter="species"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeSpecies = btn.dataset.value;
+                applyFilters();
+            });
+        });
+        document.querySelectorAll('[data-filter="age"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter="age"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeAgeRange = { min: parseInt(btn.dataset.min), max: parseInt(btn.dataset.max) };
+                applyFilters();
+            });
+        });
+        document.getElementById('resetFilters').addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            activeSpecies = null;
+            activeAgeRange = null;
+            renderCards(animals);
+        });
+    }
+    
+    renderCards(animals);
+    initFilters();
+</script>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

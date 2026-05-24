@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Барсик",
+    "species": "cat",
+    "breed": "Дворняга",
+    "age_months": 24,
+    "size": "средний",
+    "is_active": true,
+    "photo_url": "https://drive.google.com/thumbnail?id=1UNZrPkA3KsxEDFMAbapRVFnELrGyBlT8&sz=w1000",
+    "description": "Ласковый и игривый",
+    "created_at": "2025-01-01"
+  },
+  {
+    "id": 2,
+    "name": "Шарик",
+    "species": "dog",
+    "breed": "Дворняга",
+    "age_months": 12,
+    "size": "мелкий",
+    "is_active": true,
+    "photo_url": "https://drive.google.com/thumbnail?id=1A33BXtdVZZ-Subwj_VhES0F9N0NFhKtq&sz=w1000",
+    "description": "Спокойный",
+    "created_at": "2025-01-02"
+  },
+  {
+    "id": 3,
+    "name": "Бобик",
+    "species": "dog",
+    "breed": "Дворняга",
+    "age_months": 5,
+    "size": "крупный",
+    "is_active": true,
+    "photo_url": "https://drive.google.com/thumbnail?id=1ObPB2YJzXuWHvPn1FP9GKfN6fdEj_Nsp&sz=w1000",
+    "description": "Быстрый",
+    "created_at": "2025-01-03"
+  }
+]

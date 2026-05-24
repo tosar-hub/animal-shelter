@@ -1,0 +1,109 @@
+---
+layout: base.njk
+title: Каталог животных
+---
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Фильтры</h5>
+                <div class="mb-2"><strong>Вид</strong></div>
+                <div class="btn-group-vertical w-100" id="filterSpecies"></div>
+                <hr>
+                <div class="mb-2"><strong>Возраст</strong></div>
+                <div class="btn-group-vertical w-100" id="filterAge"></div>
+                <hr>
+                <button class="btn btn-secondary w-100 mt-3" id="resetFilters">Сбросить</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="row" id="animalsContainer">
+            <!-- Карточки будут вставлены JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const animals = {{ animals | dump | safe }};
+    
+    function renderCards(filtered) {
+        const container = document.getElementById('animalsContainer');
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-info">Нет животных с такими критериями</div></div>';
+            return;
+        }
+        container.innerHTML = filtered.map(animal => `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <img src="${animal.photo_url || 'https://via.placeholder.com/300x200?text=Нет+фото'}" class="card-img-top" alt="${animal.name}">
+                    <div class="card-body">
+                        <h5 class="card-title">${animal.name}</h5>
+                        <p class="card-text">
+                            <span class="badge bg-primary">${animal.species === 'cat' ? 'Кошка' : 'Собака'}</span>
+                            <span class="badge bg-secondary">${animal.age_months < 12 ? animal.age_months + ' мес.' : Math.floor(animal.age_months/12) + ' г.'}</span>
+                            <br>${animal.breed}<br>
+                            ${animal.description.substring(0, 80)}...
+                        </p>
+                        <a href="/animal/${animal.id}/" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function initFilters() {
+        const speciesSet = [...new Set(animals.map(a => a.species))];
+        const speciesDiv = document.getElementById('filterSpecies');
+        speciesDiv.innerHTML = speciesSet.map(s => `
+            <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="species" data-value="${s}">${s === 'cat' ? 'Кошки' : 'Собаки'}</button>
+        `).join('');
+        
+        const ageRanges = [
+            { label: 'До 6 мес', min: 0, max: 6 },
+            { label: '6-12 мес', min: 6, max: 12 },
+            { label: '1-3 года', min: 12, max: 36 },
+            { label: 'Старше 3 лет', min: 36, max: Infinity }
+        ];
+        const ageDiv = document.getElementById('filterAge');
+        ageDiv.innerHTML = ageRanges.map(r => `
+            <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="age" data-min="${r.min}" data-max="${r.max}">${r.label}</button>
+        `).join('');
+        
+        let activeSpecies = null;
+        let activeAgeRange = null;
+        
+        function applyFilters() {
+            let filtered = animals;
+            if (activeSpecies) filtered = filtered.filter(a => a.species === activeSpecies);
+            if (activeAgeRange) filtered = filtered.filter(a => a.age_months >= activeAgeRange.min && a.age_months < activeAgeRange.max);
+            renderCards(filtered);
+        }
+        
+        document.querySelectorAll('[data-filter="species"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter="species"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeSpecies = btn.dataset.value;
+                applyFilters();
+            });
+        });
+        document.querySelectorAll('[data-filter="age"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter="age"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeAgeRange = { min: parseInt(btn.dataset.min), max: parseInt(btn.dataset.max) };
+                applyFilters();
+            });
+        });
+        document.getElementById('resetFilters').addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            activeSpecies = null;
+            activeAgeRange = null;
+            renderCards(animals);
+        });
+    }
+    
+    renderCards(animals);
+    initFilters();
+</script>

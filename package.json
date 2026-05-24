@@ -1,0 +1,11 @@
+{
+  "name": "shelter-catalog",
+  "scripts": {
+    "build": "node fetch-sheets.js && npx @11ty/eleventy",
+    "start": "npm run build -- --serve"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.5",
+    "googleapis": "^172.0.0"
+  }
+}

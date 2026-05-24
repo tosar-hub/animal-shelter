@@ -1,0 +1,27 @@
+---
+pagination:
+    data: animals
+    size: 1
+    alias: animal
+permalink: "animal/{{ animal.id }}/index.html"
+layout: base.njk
+---
+<div class="row">
+    <div class="col-md-6">
+        <img src="{{ animal.photo_url or 'https://via.placeholder.com/600x400' }}" class="img-fluid rounded" alt="{{ animal.name }}">
+    </div>
+    <div class="col-md-6">
+        <h2>{{ animal.name }}</h2>
+        <p><strong>Вид:</strong>
+            {% if animal.species == 'cat' %}
+                Кошка
+            {% else %}
+                Собака
+            {% endif %}
+        </p>
+        <p><strong>Порода:</strong> {{ animal.breed }}</p>
+        <p><strong>Возраст:</strong> {{ animal.age_months }} мес.</p>
+        <p><strong>Описание:</strong> {{ animal.description }}</p>
+        <a href="/" class="btn btn-primary">← Назад к списку</a>
+    </div>
+</div>
