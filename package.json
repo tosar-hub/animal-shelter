@@ -2,8 +2,7 @@
   "name": "animal-shelter",
   "version": "1.0.0",
   "scripts": {
-    "build": "node fetch-sheets.js && npx @11ty/eleventy",
-    "start": "npm run build -- --serve"
+    "build": "node fetch-sheets.js && npx @11ty/eleventy"
   },
   "dependencies": {
     "@11ty/eleventy": "^2.0.1"

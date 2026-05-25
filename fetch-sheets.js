@@ -1,17 +1,18 @@
 const fs = require('fs');
 const path = require('path');
-
-// ЗАМЕНИТЕ НА ID ВАШЕЙ ТАБЛИЦЫ
-const SPREADSHEET_ID = '1ABC123...'; 
+//https://docs.google.com/spreadsheets/d/1VyXoAIYIZgWAMa5taYN8cQhuGfuHHcdtX6gQXSjQjCA/edit?usp=sharing
+// ЗАМЕНИТЕ ЭТОТ ID НА ID ВАШЕЙ ТАБЛИЦЫ
+const SPREADSHEET_ID = '1VyXoAIYIZgWAMa5taYN8cQhuGfuHHcdtX6gQXSjQjCA'; 
 const SHEET_NAME = 'Animals';
 
 async function fetchAnimals() {
+  // Публичный CSV экспорт Google Sheets
   const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
   
   const response = await fetch(url);
   const csvText = await response.text();
   
-  // Простой парсинг CSV
+  // Простой парсинг CSV (без сторонних библиотек)
   const rows = csvText.split('\n').map(row => row.split(','));
   const headers = rows[0].map(h => h.replace(/^"|"$/g, '').trim());
   
@@ -22,21 +23,16 @@ async function fetchAnimals() {
       if (h === 'id') val = parseInt(val, 10);
       if (h === 'age_months') val = parseInt(val, 10);
       if (h === 'is_active') val = (val.toUpperCase() === 'TRUE');
-      // нормализация пола
-      if (h === 'gender') {
-        if (val === 'male' || val === 'm') val = 'male';
-        else if (val === 'female' || val === 'f') val = 'female';
-        else val = 'unknown';
-      }
       obj[h] = val;
     });
     return obj;
-  }).filter(a => a.is_active === true);
+  }).filter(a => a.is_active === true); // только активные
   
+  // Сохраняем в _data/animals.json
   const dataDir = path.join(__dirname, '_data');
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
   fs.writeFileSync(path.join(dataDir, 'animals.json'), JSON.stringify(animals, null, 2));
-  console.log(`✅ Загружено ${animals.length} животных`);
+  console.log(`✅ Загружено ${animals.length} животных из таблицы`);
 }
 
 fetchAnimals().catch(console.error);
