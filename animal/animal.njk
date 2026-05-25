@@ -12,16 +12,20 @@ layout: base.njk
     </div>
     <div class="col-md-6">
         <h2>{{ animal.name }}</h2>
-        <p><strong>Вид:</strong>
-            {% if animal.species == 'cat' %}
-                Кошка
-            {% else %}
-                Собака
-            {% endif %}
-        </p>
+        <p><strong>Вид:</strong> {{ 'Кошка' if animal.species == 'cat' else 'Собака' }}</p>
         <p><strong>Порода:</strong> {{ animal.breed }}</p>
         <p><strong>Возраст:</strong> {{ animal.age_months }} мес.</p>
+        <p><strong>Пол:</strong>
+            {% if animal.gender == 'male' %}
+                Мальчик
+            {% elif animal.gender == 'female' %}
+                Девочка
+            {% else %}
+                Неизвестно
+            {% endif %}
+        </p>
+        <p><strong>Цвет:</strong> {{ animal.color or 'Не указан' }}</p>
         <p><strong>Описание:</strong> {{ animal.description }}</p>
-        <a href="/" class="btn btn-primary">← Назад к списку</a>
+        <a href="{{ '/' | url }}" class="btn btn-primary">← Назад к списку</a>
     </div>
 </div>
