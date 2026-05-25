@@ -2,7 +2,7 @@
   "name": "animal-shelter",
   "version": "1.0.0",
   "scripts": {
-    "build": "node fetch-sheets.js && npx @11ty/eleventy",
+    "build": "node fetch-sheets.js && ./node_modules/.bin/eleventy",
     "start": "npm run build -- --serve"
   },
   "dependencies": {
