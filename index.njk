@@ -13,14 +13,18 @@ title: Каталог животных
                 <div class="mb-2"><strong>Возраст</strong></div>
                 <div class="btn-group-vertical w-100" id="filterAge"></div>
                 <hr>
+                <div class="mb-2"><strong>Пол</strong></div>
+                <div class="btn-group-vertical w-100" id="filterGender"></div>
+                <hr>
+                <div class="mb-2"><strong>Цвет</strong></div>
+                <div class="btn-group-vertical w-100" id="filterColor"></div>
+                <hr>
                 <button class="btn btn-secondary w-100 mt-3" id="resetFilters">Сбросить</button>
             </div>
         </div>
     </div>
     <div class="col-md-9">
-        <div class="row" id="animalsContainer">
-            <!-- Карточки будут вставлены JS -->
-        </div>
+        <div class="row" id="animalsContainer"></div>
     </div>
 </div>
 
@@ -33,7 +37,10 @@ title: Каталог животных
             container.innerHTML = '<div class="col-12"><div class="alert alert-info">Нет животных с такими критериями</div></div>';
             return;
         }
-        container.innerHTML = filtered.map(animal => `
+        container.innerHTML = filtered.map(animal => {
+            const genderText = { 'male': 'Мальчик', 'female': 'Девочка', 'unknown': 'Неизвестно' }[animal.gender] || animal.gender || 'Не указан';
+            const colorText = animal.color || 'Не указан';
+            return `
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100">
                     <img src="${animal.photo_url || 'https://via.placeholder.com/300x200?text=Нет+фото'}" class="card-img-top" alt="${animal.name}">
@@ -42,23 +49,30 @@ title: Каталог животных
                         <p class="card-text">
                             <span class="badge bg-primary">${animal.species === 'cat' ? 'Кошка' : 'Собака'}</span>
                             <span class="badge bg-secondary">${animal.age_months < 12 ? animal.age_months + ' мес.' : Math.floor(animal.age_months/12) + ' г.'}</span>
+                            <br><span class="badge bg-info">${genderText}</span>
+                            <span class="badge bg-secondary">${colorText}</span>
                             <br>${animal.breed}<br>
-                            ${animal.description.substring(0, 80)}...
+                            ${(animal.description || '').substring(0, 80)}...
                         </p>
-                        <a href="/animal/${animal.id}/" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                        <a href="{{ '/animal/' + animal.id + '/' | url }}" class="btn btn-sm btn-outline-primary">Подробнее</a>
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
     
     function initFilters() {
+        // Вид
         const speciesSet = [...new Set(animals.map(a => a.species))];
         const speciesDiv = document.getElementById('filterSpecies');
-        speciesDiv.innerHTML = speciesSet.map(s => `
-            <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="species" data-value="${s}">${s === 'cat' ? 'Кошки' : 'Собаки'}</button>
-        `).join('');
+        if (speciesDiv) {
+            speciesDiv.innerHTML = speciesSet.map(s => `
+                <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="species" data-value="${s}">${s === 'cat' ? 'Кошки' : 'Собаки'}</button>
+            `).join('');
+        }
         
+        // Возраст
         const ageRanges = [
             { label: 'До 6 мес', min: 0, max: 6 },
             { label: '6-12 мес', min: 6, max: 12 },
@@ -66,17 +80,42 @@ title: Каталог животных
             { label: 'Старше 3 лет', min: 36, max: Infinity }
         ];
         const ageDiv = document.getElementById('filterAge');
-        ageDiv.innerHTML = ageRanges.map(r => `
-            <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="age" data-min="${r.min}" data-max="${r.max}">${r.label}</button>
-        `).join('');
+        if (ageDiv) {
+            ageDiv.innerHTML = ageRanges.map(r => `
+                <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="age" data-min="${r.min}" data-max="${r.max}">${r.label}</button>
+            `).join('');
+        }
+        
+        // Пол
+        const genderMap = { 'male': 'Мальчик', 'female': 'Девочка', 'unknown': 'Неизвестно' };
+        const genderSet = [...new Set(animals.map(a => a.gender).filter(g => g))];
+        const genderDiv = document.getElementById('filterGender');
+        if (genderDiv) {
+            genderDiv.innerHTML = genderSet.map(g => `
+                <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="gender" data-value="${g}">${genderMap[g] || g}</button>
+            `).join('');
+        }
+        
+        // Цвет
+        const colorSet = [...new Set(animals.map(a => a.color).filter(c => c && c.trim() !== ''))];
+        const colorDiv = document.getElementById('filterColor');
+        if (colorDiv) {
+            colorDiv.innerHTML = colorSet.map(c => `
+                <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="color" data-value="${c}">${c}</button>
+            `).join('');
+        }
         
         let activeSpecies = null;
         let activeAgeRange = null;
+        let activeGender = null;
+        let activeColor = null;
         
         function applyFilters() {
             let filtered = animals;
             if (activeSpecies) filtered = filtered.filter(a => a.species === activeSpecies);
             if (activeAgeRange) filtered = filtered.filter(a => a.age_months >= activeAgeRange.min && a.age_months < activeAgeRange.max);
+            if (activeGender) filtered = filtered.filter(a => a.gender === activeGender);
+            if (activeColor) filtered = filtered.filter(a => a.color === activeColor);
             renderCards(filtered);
         }
         
@@ -96,12 +135,34 @@ title: Каталог животных
                 applyFilters();
             });
         });
-        document.getElementById('resetFilters').addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            activeSpecies = null;
-            activeAgeRange = null;
-            renderCards(animals);
+        document.querySelectorAll('[data-filter="gender"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter="gender"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeGender = btn.dataset.value;
+                applyFilters();
+            });
         });
+        document.querySelectorAll('[data-filter="color"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-filter="color"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeColor = btn.dataset.value;
+                applyFilters();
+            });
+        });
+        
+        const resetBtn = document.getElementById('resetFilters');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                activeSpecies = null;
+                activeAgeRange = null;
+                activeGender = null;
+                activeColor = null;
+                renderCards(animals);
+            });
+        }
     }
     
     renderCards(animals);
